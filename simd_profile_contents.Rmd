@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-pacman::p_load(tidyverse, plotly, crosstalk)
+pacman::p_load(tidyverse, plotly, crosstalk, here, flextable)
 ```
 
 
@@ -50,7 +50,6 @@ As described in [the SIMD 2020 technical notes](https://www.gov.scot/publication
 High deprivation in one domain does not necessarily imply high deprivation in another domain, though many domains are highly positively correlated with each other, and with the overall rank. The exception to this is the geographical access to services domain, which is negatively correlated with other domains. The correlation between overall SIMD rank and specific domains, for the 2020 SIMD, is shown in Chart 1 below:
 
 ```{r, echo=FALSE, include = TRUE}
-pacman::p_load(tidyverse, here)
 
 if(!file.exists(here("data", "simd_data.xlsx"))){
   download.file(
@@ -166,6 +165,8 @@ SIMD data by release (from 2004 to 2020) and datazone are available from [this P
 In addition, deprivation related tables and graphs appear throughout the ScotPHO website within topic pages including physical activity and deaths. For further information on how deprivation is related to a specific topic, please go to the data section for that topic.  
 
 Deprivation related tables and graphs appear throughout this site within topic pages e.g. physical activity, deaths, etc. For further information on how deprivation is related to a specific topic, please go to the data section for that topic.
+
+## Deprivation by health boards and local authorities
 
 Chart 2 shows the how the 15% most deprived datazones in Scotland are distributed across NHS Health boards. The slider at the bottom can be moved to show how the proportions vary by level of deprivation (e.g. 0.25 shows the share of datazones in the most deprived 35% of Health Boards). 
 
@@ -365,6 +366,69 @@ fig
 **Chart 3**: The proportion of datazones in each local authority which are in the 15% most deprived small areas in Scotland. (The slider can be used to select other deprivation thresholds. Source: SIMD 2020)
 
 Chart 3 shows that Glasgow City, Inverclyde and Dundee City are the local authorities with the greatest proportion of datazones in the 15% most deprived areas of Scotland, with 39%, 37% and 31% this deprived respectively. At the other extreme the Shetland Islands, Orkney Islands an Na h-Eileanan Siar contain no datazones in the 15% most deprived areas of Scotland. 
+
+## Deprivation by urbanity and rurality 
+
+There are marked differences in area deprivation by urbanity and rurality. Both six-fold and eight-fold Urban-Rural categories are used for Scottish datazones. However these groups do not contain equal populations, and so comparing the share of datazones in each category within (say) the most deprived 15% of Scottish datazones is not appropriate. Instead, the relative share of deprived datazones in each category to the share of all datazones in each category can be used to calculate to what extent deprived datazones are over-represented or under-represented in each urban-rural category. This is shown in Table 1 for the SIMD 2020:
+
+```{r, echo = FALSE, include = TRUE}
+# So let's construct a new aval containing the different x-y tuples given the threshold selected
+
+
+calc_prop_deprived <- function(q, dta){
+    dta %>% 
+      group_by(urname) %>% 
+      summarise(
+        prop_deprived = mean(pct_rank < q),
+        n_datazones   = n()
+        ) %>% 
+      ungroup() %>% 
+      mutate(share_of_dz = n_datazones / sum(n_datazones))
+}
+
+df_rank <- 
+  dta %>% 
+    select(URclass, URname, SIMD2020v2_Rank) %>% 
+    mutate(urname = glue::glue("{URclass}: {URname}")) %>% 
+    select(urname, SIMD2020v2_Rank) %>% 
+    mutate(pct_rank = SIMD2020v2_Rank / max(SIMD2020v2_Rank)) %>% 
+    tibble()
+
+
+shared_df <- tibble(
+  dep_quants = seq(0.05, 0.95, by = 0.05)
+) %>% 
+  mutate(derived_props = map(dep_quants, calc_prop_deprived, dta = df_rank)) %>% 
+  unnest(derived_props) %>% 
+  mutate(undep_quants = 1 - dep_quants) %>% 
+  mutate(over_rep = prop_deprived / share_of_dz)
+
+shared_df %>% 
+  filter(between(dep_quants, 0.14, 0.16)) %>% 
+  select(urname, prop_deprived, n_datazones, share_of_dz, over_rep) %>% 
+  mutate(under_rep = 1/ over_rep) %>% 
+  mutate(over_under_rep = glue::glue("{round(over_rep, 1)}:1 ({round(under_rep, 1)}:1)")) %>% 
+  mutate(prop_deprived = round(100 * prop_deprived, 1), share_of_dz = round(100 * share_of_dz, 1)) %>% 
+  select(-over_rep, -under_rep) %>% 
+  flextable() %>% 
+  set_header_labels(urname = "Urban Rural Category", prop_deprived = "Percentage deprived", n_datazones = "Number of datazones", share_of_dz = "Percentage of datazones", over_under_rep = "Over(/Under) representation of deprived populations") %>% 
+  footnote(i = 1, j = c(2, 5), 
+           ref_symbols = c("a", "b"), 
+           value = as_paragraph(
+             c(
+               "Percent of datazones in most deprived 15% of all parts of Scotland",
+               "Overrepresentation: Ratio of Percentage deprived to Percentage of datazones; underrepresentation: Ratio of Percentage of datazones to Percentage deprived"
+             )
+           ), 
+           part = "header"
+  ) %>% 
+  set_caption("Table 1: Over and Under-representation of deprived populations by Urban-Rural category relative to size of Urban-Rural category")
+
+```
+
+Table 1 shows, for example, that 2294 datazones (32.9% of all datazones) are categorised as within Large Urban Areas. 22.1% of areas are categorised as deprived using the 15% threshold, and so this measure high deprivation is slightly under-represented in this Urban-Rural Category. Deprived areas are very heavily under-represented in Accessible Rural (category 5) and Remote Rural (category 6) areas, and Accessible Small Towns (category 3) are the category most representative of Scotland as a whole. 
+
+Remote Small Towns (category 4) comprise 10.9% of the most deprived datazones in Scotland, but only 3.7% of datazones in Scotland, and so have the greatest over-representation of deprived areas. 
 
 
 # Key data sources 
