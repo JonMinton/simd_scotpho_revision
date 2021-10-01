@@ -15,7 +15,7 @@ pacman::p_load(tidyverse, plotly, crosstalk)
 
 ## Deprivation: key points 
 
-*The SIMD is the Scottish Government's official tool for identifying small area concentrations of multiple deprivation across all of Scotland. The SIMD provides a relative ranking of 6,976 small areas (datazones) across Scotland from the most deprived (ranked one) to the least deprived in Scotland (ranked 6,976).  Direct comparisons of indicators between all releases are not possible because of changes to datazone boundaries.*
+**The SIMD is the Scottish Government's official tool for identifying small area concentrations of multiple deprivation across all of Scotland. The SIMD provides a relative ranking of 6,976 small areas (datazones) across Scotland from the most deprived (ranked one) to the least deprived in Scotland (ranked 6,976).  Direct comparisons of indicators between all releases are not possible because of changes to datazone boundaries.**
 
 The main measure of deprivation used in Scotland is the Scottish Index of Multiple Deprivation (SIMD).  The SIMD was first published by the Scottish Government in 2004. Successive revisions were published in 2004, 2006, 2009, 2012, 2016 and 2020, which is the most recent version of the index.
 
