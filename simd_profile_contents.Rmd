@@ -82,7 +82,8 @@ corrplot::corrplot(
   tl.col = "black")
 
 ```
-**Chart 1**: Spearman correlation of SIMD 2020 domain ranks and overall rank.
+
+**Chart 1**: Spearman correlation of SIMD 2020 domain ranks and overall rank. Blue shades indicate positive correlations, reds negative correlations, and darkness of shade indicates strength of correlations.
 
 The overall domain is very strongly correlated with both the Income and Employment domains, followed by the Education and Health domains. The Crime and Housing domains are moderately correlated, with the Access domain having a weak but negative correlation with all other domains and overall SIMD rank. 
 
@@ -119,6 +120,7 @@ The same Introduction recommends **against** attempting to use the SIMD for the 
 - Attempting to infer where rich and poor households live; 
 - and: Identifying affluent areas (as absence of deprivation is not the same as presence of affluence). 
 
+Additional caveats in interpreting SIMD data are also described in the 'Limitations of SIMD' subsection of [this PHS website](https://www.isdscotland.org/Products-and-Services/GPD-Support/Deprivation/SIMD/)
 
 # Policy context
 
@@ -134,13 +136,13 @@ In November 2008, the Scottish Government launched [Achieving Our Potential: A F
 - to decrease the proportion of individuals living in poverty; and
 - to increase [healthy life expectancy](https://www.scotpho.org.uk/population-dynamics/healthy-life-expectancy/key-points) at birth in the most deprived areas.
 
-Related to this, many of the health-related indicators set out in [Scotland Performs](https://nationalperformance.gov.scot/) (for example, on smoking, problem drug misuse and alcohol-related admissions to hospital) will particularly benefit people living in the most deprived communities in Scotland if their targets are achieved.
+Related to this, many of the health-related indicators set out in [Scotland Performs/the National Performance Framework](https://nationalperformance.gov.scot/) (for example, on smoking, problem drug misuse and alcohol-related admissions to hospital) will particularly benefit people living in the most deprived communities in Scotland if their targets are achieved.
 
 A report from the Independent Advisor on Poverty and Inequality to the First Minister, [Shifting the Curve](http://www.gov.scot/Publications/2016/01/1984), was published in January 2016. The latest report on [Long Term Monitoring of Health Inequalities](https://www.gov.scot/publications/long-term-monitoring-health-inequalities-january-2021-report/) was published in January 2021.
 
 The international context is set by the World Health Organization [Commission on Social Determinants of Health (2008)](http://whqlibdoc.who.int/publications/2008/9789241563703_eng.pdf), which notes that:
 
-the development of a society, rich or poor, can be judged by the quality of its population's health, how fairly health is distributed across the social spectrum, and the degree of protection provided from disadvantage as a result of ill-health. 
+    the development of a society, rich or poor, can be judged by the quality of its population's health, how fairly health is distributed across the social spectrum, and the degree of protection provided from disadvantage as a result of ill-health. 
 
 In 2010, the Chair of the Commission, Sir Michael Marmot, concluded a strategic review of health inequalities in England ([Strategic Review of Health Inequalities in England Post 2010](http://www.instituteofhealthequity.org/)).  Its analysis and recommendations remain relevant to Scotland. Marmot and colleagues followed up the 2010 review with [Health Equity in England: The Marmot review 10 years on](https://www.health.org.uk/publications/reports/the-marmot-review-10-years-on?gclid=CjwKCAjw-sqKBhBjEiwAVaQ9a-5gfu9eoUcgiavt-dYs8Z1LoPM3mWQsdITg6UIZzDdKnRJdoTG--hoCLqcQAvD_BwE), published by the Health Foundation in February 2020.
 
@@ -168,7 +170,7 @@ Deprivation related tables and graphs appear throughout this site within topic p
 
 ## Deprivation by health boards and local authorities
 
-Chart 2 shows the how the 15% most deprived datazones in Scotland are distributed across NHS Health boards. The slider at the bottom can be moved to show how the proportions vary by level of deprivation (e.g. 0.25 shows the share of datazones in the most deprived 35% of Health Boards). 
+Chart 2 shows the how the 15% most deprived datazones in Scotland are distributed across NHS Health boards. The slider at the bottom can be moved to show how the proportions vary by level of deprivation (e.g. 0.25 shows the share of datazones in the most deprived 25% of Health Boards). 
 
 
 ```{r, echo = FALSE, include = TRUE}
@@ -369,7 +371,7 @@ Chart 3 shows that Glasgow City, Inverclyde and Dundee City are the local author
 
 ## Deprivation by urbanity and rurality 
 
-There are marked differences in area deprivation by urbanity and rurality. Both six-fold and eight-fold Urban-Rural categories are used for Scottish datazones. However these groups do not contain equal populations, and so comparing the share of datazones in each category within (say) the most deprived 15% of Scottish datazones is not appropriate. Instead, the relative share of deprived datazones in each category to the share of all datazones in each category can be used to calculate to what extent deprived datazones are over-represented or under-represented in each urban-rural category. This is shown in Table 1 for the SIMD 2020:
+There are marked differences in area deprivation by urbanity and rurality. Both [six-fold and eight-fold Urban-Rural categories](https://www.gov.scot/publications/scottish-government-urban-rural-classification-2016/pages/2/) are used to categorise Scottish datazones. However these groups do not contain equal populations, and so comparing the share of datazones in each category within (say) the most deprived 15% of Scottish datazones is not appropriate. Instead, the relative share of deprived datazones in each category to the share of all datazones in each category can be used to calculate to what extent deprived datazones are over-represented or under-represented in each urban-rural category. This is shown in Table 1 for the SIMD 2020:
 
 ```{r, echo = FALSE, include = TRUE}
 # So let's construct a new aval containing the different x-y tuples given the threshold selected
@@ -426,7 +428,7 @@ shared_df %>%
 
 ```
 
-Table 1 shows, for example, that 2294 datazones (32.9% of all datazones) are categorised as within Large Urban Areas. 22.1% of areas are categorised as deprived using the 15% threshold, and so this measure high deprivation is slightly under-represented in this Urban-Rural Category. Deprived areas are very heavily under-represented in Accessible Rural (category 5) and Remote Rural (category 6) areas, and Accessible Small Towns (category 3) are the category most representative of Scotland as a whole. 
+Table 1 shows, for example, that 2294 datazones (32.9% of all datazones) are categorised as within Large Urban Areas. 22.1% of these same areas are categorised as deprived using the 15% threshold, and so this measure high deprivation is slightly under-represented in this Urban-Rural Category. Deprived areas are very heavily under-represented in Accessible Rural (category 5) and Remote Rural (category 6) areas, and Accessible Small Towns (category 3) are the category most representative of Scotland as a whole. 
 
 Remote Small Towns (category 4) comprise 10.9% of the most deprived datazones in Scotland, but only 3.7% of datazones in Scotland, and so have the greatest over-representation of deprived areas. 
 
@@ -439,7 +441,7 @@ A number of different measures of deprivation are in current use. This section p
 
 **[Scottish Index of Multiple Deprivation (SIMD)](http://www.gov.scot/simd)**
 
-The most recent measure of deprivation is the Scottish Government's Scottish Index of Multiple Deprivation (SIMD). The latest version (SIMD 2020) was published in January 2020  An interactive mapping tool is available [here](http://www.gov.scot/Topics/Statistics/SIMD/SIMDInteractive). Further information and links to data, including [spatial data](https://www.spatialdata.gov.scot/geonetwork/srv/eng/catalog.search#/metadata/02866b0b-66e5-46ab-9b1c-d433dc3c2fae), can be found [here](https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/).
+The most recent measure of deprivation is the Scottish Government's Scottish Index of Multiple Deprivation (SIMD). The latest version (SIMD 2020) was published in January 2020.  An interactive mapping tool is available [here](http://www.gov.scot/Topics/Statistics/SIMD/SIMDInteractive). Further information and links to data, including [spatial data](https://www.spatialdata.gov.scot/geonetwork/srv/eng/catalog.search#/metadata/02866b0b-66e5-46ab-9b1c-d433dc3c2fae), can be found [here](https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/).
 
 Data are also available for the SIMD 2004, 2006, 2009, 2012 and 2016.  [PHS Data and Intelligence](http://www.isdscotland.org/Products-and-Services/GPD-Support/Deprivation/SIMD) (formerly ISD Scotland) have also published detailed look-up files for SIMD 2004, 2006, 2009, 2012 and 2016.
 
@@ -449,19 +451,17 @@ The Arbuthnott formula was developed during 1999-2000 as part of a larger piece 
 
 **[Carstairs and Morris Index](https://www.gla.ac.uk/researchinstitutes/healthwellbeing/research/mrccsosocialandpublichealthsciencesunit/programmes/inequalities/healthinequalities/carstairsscores/)**
 
-The Carstairs and Morris Index index was originally developed in the 1980s using 1981 Census data and is updated using the most recent Census data. The index is derived from four Census indicators: low social class, lack of car ownership, overcrowding and male unemployment.  Carstairs Scores for Scottish Postcode Sectors, Datazones & Output Areas from the 2011 Census have now been published on Glasgow University's MRC Social and Public Health Sciences Unit (see link above). Note that the previous scores from 1981-2001 (at postcode level) can also be accessed there as well.
+The Carstairs and Morris Index index was originally developed in the 1980s using 1981 Census data and is updated using the most recent Census data. The index is derived from four Census indicators: low social class, lack of car ownership, overcrowding and male unemployment.  Carstairs Scores for Scottish Postcode Sectors, Datazones & Output Areas from the 2011 Census were published on Glasgow University's MRC Social and Public Health Sciences Unit (see link above). Note that the previous scores from 1981-2001 (at postcode level) can also be accessed there as well.
 
 **[The Scottish Burden of Disease Study (2016) Deprivation Report](http://www.healthscotland.scot/health-inequalities/impact-of-ill-health/impact-of-deprivation-on-health)**
 
 The analysis used an internationally recognised approach, referred to as ‘Burden of Disease’, to quantify the difference between the ideal of living to old age in good health and the situation where healthy life is shortened by illness, injury, disability and early death.
 
+An overview of the Scottish Burden of Disease is available [here](http://www.healthscotland.scot/health-inequalities/impact-of-ill-health/burden-of-disease-overview).
+
 **[Dimensions of diversity: Population differences and health improvement opportunities](https://www.scotpho.org.uk/publications/reports-and-papers/dimensions-of-diversity-population-differences-and-health-improvement-opportunities/)**
 
 Published in 2010, this report provides a concise overview of basic information about 13 characteristics or groups of the population of Scotland, linking users to sources of further information. The distribution of each group is described in terms of their deprivation status.
-
-**[Family Resources Survey analyses of poverty](http://www.scotland.gov.uk/Topics/Statistics/Browse/Social-Welfare/IncomePoverty/CoreAnalysis#a2)**
-
-Detailed data on relative poverty in Scotland (by age, gender, ethnicity, urban-rural and SIMD classification) and inequality (using the Gini Coefficient), based on the Family Resources Survey is published by the Scottish Government.
 
 **[Local estimates of relative household poverty](https://www.gov.scot/Publications/2018/03/3017)**
 
@@ -469,25 +469,18 @@ The Scottish Government have published estimates, based on national survey data,
 
 **Local estimates of child poverty**
 
-HM Revenue and Customs no longer publish local authority-level estimates of children living in income poverty.  [The last estimates of child income poverty published by HMRC relate to 2011](https://www.gov.uk/government/statistics/personal-tax-credits-children-in-low-income-families-local-measure).  Earlier estimates have been archived [here](http://webarchive.nationalarchives.gov.uk/20121103084242/http:/www.hmrc.gov.uk/stats/personal-tax-credits/child_poverty.htm). 
-
-[End Child Poverty](http://www.endchildpoverty.org.uk/poverty-in-your-area-2016/) has used the same methodology and more recent data to estimate child poverty across the UK (including Scottish local authorities and parliamentary constituencies).  The latest estimates published relate to 2015.
+Scotland's National Performance Framework includes [trends of child material deprivation](https://nationalperformance.gov.scot/measuring-progress/national-indicator-performance), which shows the percentage of children living in poverty in Scotland at around 13%, and possibly increasing slightly in recent years. 
 
 **[Public Health Scotland, Data and Intelligence, formerly ISD Scotland - Deprivation](https://www.isdscotland.org/Products-and-services/Gpd-support/Deprivation/)**
 
-The website above, formerly from ISD Scotland, has a section on deprivation with useful pages with recommendations for analysing health data, ways to categorise deprivation variables and choices of geographical unit for small area analysis.
-
-[Scottish Indices of Deprivation 2003](http://www.isdscotland.org/Products-and-Services/GPD-Support/Deprivation/)
-
-The precursor to the SIMD were the [Scottish Indices of Deprivation 2003](https://www.researchgate.net/publication/265271331_Scottish_Indices_of_Deprivation_2003), produced by Oxford University on behalf of the Scottish Executive. Similar to SIMD 2004, but using slightly different domains and indicators, this deprivation measure was calculated at electoral ward level. An overall index, domain-specific indices, report and maps are all available from the relevant page of the Scottish Executive web site (see link above).
-
+The website above, formerly from ISD Scotland, has a section on deprivation with useful pages with recommendations for analysing health data, ways to categorise deprivation variables and choices of geographical unit for small area analysis. It recommends using the Carstairs and Morris Index for estimates of area deprivation prior to 1996, and the SIMD for measuring area deprivation from 1996 onwards. 
 
 
 # Key references and evidence
 
 ## Deprivation: key references and evidence
 
-Bailey N, Flint J, Goodlad R, Shucksmith M, Fitzpatrick S, Pryce G. [Measuring Deprivation in Scotland: Developing a Long-Term Strategy Final Report](http://www.scotland.gov.uk/library5/social/mdis-00.asp). Glasgow: Scottish Centre for Research on Social Justice, Universities of Glasgow and Aberdeen 2003
+Bailey N, Flint J, Goodlad R, Shucksmith M, Fitzpatrick S, Pryce G. [Measuring Deprivation in Scotland: Developing a Long-Term Strategy Final Report](http://eprints.gla.ac.uk/67863/). Glasgow: Scottish Centre for Research on Social Justice, Universities of Glasgow and Aberdeen 2003
 
 Boyle P, Exeter D, Feng Z, Flowerdew R. [Suicide gap among young adults in Scotland: population study](http://bmj.bmjjournals.com/cgi/content/full/330/7484/175)
 BMJ, January 22, 2005; 330(7484): 175 - 176.
@@ -504,34 +497,10 @@ McLeod A. [Changing patterns of teenage pregnancy: population based study of sma
 
 McLoone P, Boddy FA. [Deprivation and mortality in Scotland, 1981 and 1991.](http://bmj.bmjjournals.com/cgi/content/full/309/6967/1465?maxtoshow=&HITS=10&hits=10&RESULTFORMAT=1&andorexacttitle=and&andorexacttitleabs=and&fulltext=deprivation+scotland&andorexactfulltext=and&searchid=1130520531860_13607&stored_search=&FIRSTIN) BMJ, Dec 1994; 309: 1465 - 1470.
 
-Scottish Executive. [Inequalities in Health: Report of the Measuring Inequalities in Health Working Group.](http://www.scotland.gov.uk/Publications/2004/03/19045/34233) Edinburgh: Scottish Executive, 2004
-
-Scottish Executive. [Social focus on deprived areas 2005.](http://www.scotland.gov.uk/Publications/2005/09/2792129/21311) Edinburgh: Scottish Executive, 2005
-
 Scottish Executive. [Scottish Index of Multiple Deprivation 2006: General Report.](http://www.scotland.gov.uk/Publications/2006/10/13142739/0) Edinburgh: Scottish Executive, 2006.
 
 Townsend P, Phillimore P, Beattie A. Health and deprivation: inequality and the North. London: Croom Helm, 1988.
 
-
-## References 
-
-## Effectiveness evidence
-
-ScotPHO's purpose is to describe the pattern of health across the Scottish population. As a supplementary service to users, we include the following links to external sources of quality-assured evidence on effectiveness of interventions which may include relevant material for this topic. These links are provided as an aid to users. They are by no means exhaustive nor should they be necessarily viewed as authoritative.
-
-[NHS Health Scotland: Scottish briefings on NICE public health guidance](http://www.healthscotland.com/scotlands-health/evidence/NICE.aspx)
-
-[Centre for Reviews and Dissemination](http://www.york.ac.uk/crd/)
-
-[Cochrane Library: Browse by topic](http://www.cochranelibrary.com/home/topic-and-review-group-list.html?page=topic)
-
-[EPPI-Centre: Evidence library](http://eppi.ioe.ac.uk/cms/Default.aspx?tabid=56&language=en-US)
-
-[National Institute for Health and Care Excellence (NICE) Evidence services: Evidence search](http://www.evidence.nhs.uk/)
-
-[National Institute for Health and Care Excellence (NICE) Guidance: Find guidance](https://www.nice.org.uk/guidance)
-
-[Scottish Intercollegiate Guidelines Network (SIGN)](http://www.sign.ac.uk/)
 
 # Useful links 
 
@@ -541,7 +510,6 @@ ScotPHO's purpose is to describe the pattern of health across the Scottish popul
 
 [MRC/CSO Social and Public Health Sciences Unit](http://www.gla.ac.uk/researchinstitutes/healthwellbeing/research/mrccsosocialandpublichealthsciencesunit/)
 
-[Index of Multiple Deprivation for England (London example)](http://www.neighbourhood.statistics.gov.uk/dissemination/LeadDatasetList.do?a=7&b=276743&c=london&d=13&g=325264&i=1001x1003&m=0&enc=1&domainId=10)
 
 [Poverty Alliance](http://www.povertyalliance.org/)
 
@@ -549,6 +517,5 @@ ScotPHO's purpose is to describe the pattern of health across the Scottish popul
 
 [Scottish Government - Social and Welfare - Income and Poverty Statistics](http://www.gov.scot/Topics/Statistics/Browse/Social-Welfare/IncomePoverty) 
 
-[Scottish Neighbourhood Statistics](https://www.gov.scot/Topics/Statistics/sns/SNSRef)
 
 
