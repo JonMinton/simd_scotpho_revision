@@ -1,0 +1,482 @@
+---
+title: "Deprivation"
+author: "Jon Minton"
+date: "28/09/2021"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+pacman::p_load(tidyverse, plotly, crosstalk, here, flextable)
+```
+
+# Key points
+
+## Deprivation: key points
+
+**The main measure of deprivation used in Scotland is the Scottish Index of Multiple Deprivation (SIMD). The SIMD is the Scottish Government's official tool for identifying small area concentrations of multiple deprivation across all of Scotland. The SIMD provides a relative ranking of 6,976 small areas (datazones) across Scotland from the most deprived (ranked one) to the least deprived in Scotland (ranked 6,976). Direct comparisons of indicators between all releases are not possible because of periodic changes to datazone boundaries.**
+
+The SIMD was first published by the Scottish Government in 2004. Successive revisions were published in 2004, 2006, 2009, 2012, 2016 and 2020, which is the most recent version of the index.
+
+The following points are summarised from the results of the most recent (2020) version of the [Scottish Index of Multiple Deprivation (SIMD)](https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/).
+
+[Key findings reported for SIMD 2020](https://www.gov.scot/publications/scottish-index-multiple-deprivation-2020/pages/5/) include:
+
+-   **Deprivation in the Highlands and Islands**: None of the 15% most deprived areas of Scotland are in Shetland, Orkney or the Western Isles
+-   **Persistent Deprivation**: Fourteen small areas have remained in the 5% most deprived places in Scotland since the first SIMD release in 2004. Nine of these are in Glasgow City.
+-   **Council areas in the Central Belt**: Glasgow City and Edinburgh council areas have both experienced substantial (2% or more) falls in deprivation scores from SIMD 2016 to SIMD 2020, whereas most neighbouring council areas along the Central Belt have experienced substantial (2% or more) increases in deprivation scores over the same period.
+
+# Introduction
+
+## Deprivation: Introduction
+
+The Scottish Index of Multiple Deprivation (SIMD) is a measure of area deprivation, not individual or household level deprivation; affluent households may live in deprived areas and vice versa. The overall SIMD score and deprivation ranking for small areas (known as datazones) is a weighted average of area-based scores from seven domains, each comprised of a number of indicators. In total, more than 30 separate indicators are included in the overall SIMD score.
+
+## Spatial scales, domains and indicators
+
+The SIMD is available at [datazone](https://www.gov.scot/publications/scottish-index-of-multiple-deprivation-2020v2-data-zone-look-up/) level as an overall deprivation index, and as separate indices for different domains. The SIMD 2020 summarises 34 indicators nested within the following seven domains, each of which is weighted using the percentages shown below:
+
+-   Income (28%)
+-   Employment (28%)
+-   Education (14%)
+-   Health (14%)
+-   Access to Services (9%)
+-   Crime (5%)
+-   Housing (2%)
+
+As described in [the SIMD 2020 technical notes](https://www.gov.scot/publications/simd-2020-technical-notes/), the weighting of indicators into items is determined through factor analysis, whereas the weighting of domains to the overall score is based on expert judgement. The methodology was first developed by researchers at Oxford University, then later evaluated and refined by researchers at the University of Glasgow.
+
+High deprivation in one domain does not necessarily imply high deprivation in another domain, though many domains are highly positively correlated with each other, and with the overall rank. The exception to this is the geographical access to services domain, which is negatively correlated with other domains. The correlation between overall SIMD rank and specific domains, for the 2020 SIMD, is shown in Chart 1 below:
+
+```{r, echo=FALSE, include = TRUE}
+
+if(!file.exists(here("data", "simd_data.xlsx"))){
+  download.file(
+    url = "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/01/scottish-index-of-multiple-deprivation-2020-data-zone-look-up-file/documents/scottish-index-of-multiple-deprivation-data-zone-look-up/scottish-index-of-multiple-deprivation-data-zone-look-up/govscot%3Adocument/SIMD%2B2020v2%2B-%2Bdatazone%2Blookup.xlsx",
+    destfile = here("data", "simd_data.xlsx"),
+    mode = "wb"
+  )
+}
+
+dta <- openxlsx::readWorkbook(here("data", "simd_data.xlsx"), sheet = "SIMD 2020v2 DZ lookup data")
+
+
+
+tmp <- 
+  dta %>%
+    as_tibble() %>% 
+    select(SIMD2020v2_Rank, contains("_Domain_Rank")) %>% 
+    gather(-SIMD2020v2_Rank, key = "name", value = "value") %>% 
+    mutate(name = str_remove(name, "SIMD2020_")) %>% 
+    mutate(name = str_remove(name, "SIMD2020v2_")) %>% 
+    mutate(name = str_remove(name, "_Domain_Rank")) %>% 
+    rename(Overall = SIMD2020v2_Rank) %>% 
+    spread(name, value) 
+
+corr_tmp <- cor(tmp, method = "spearman")
+
+if (!file.exists("assets/chart01_corr.png")) {
+  png("assets/chart01_corr.png", width = 12, height = 12, units = "cm", res = 150)  
+  corrplot::corrplot(
+    corr_tmp, type = "lower", method = "color",
+    addCoef.col = "white", diag = FALSE,
+    tl.col = "black")
+  dev.off()
+} else {
+  corrplot::corrplot(
+    corr_tmp, type = "lower", method = "color",
+    addCoef.col = "white", diag = FALSE,
+    tl.col = "black")
+}
+
+
+```
+
+**Chart 1**: Spearman correlation of SIMD 2020 domain ranks and overall rank. Blue shades indicate positive correlations, reds negative correlations, and darkness of shade indicates strength of correlations.
+
+The overall domain is very strongly correlated with both the Income and Employment domains, followed by the Education and Health domains. The Crime and Housing domains are moderately correlated, with the Access domain having a weak but negative correlation with all other domains and overall SIMD rank.
+
+## History
+
+The publication of the [Independent Inquiry into Inequalities in Health Report](http://www.archive.official-documents.co.uk/document/doh/ih/ih.htm) in 1998 gave a new impetus to the study of the relationship between poverty and health. In the years following its publication, alternatives to social class - as a general measure of relative affluence or poverty in a society - were increasingly investigated such as unemployment and single parenthood. Several different ways of combining variables taken from the census or elsewhere were developed as a means of categorising deprivation within the populations of small geographically defined areas (census enumeration districts, local government wards, or postcode sectors). The methods in most common use until recently were those developed by Townsend et al, Jarman and Carstairs and Morris. (See references section.) All use methods of combining variables to generate a summary score to reflect the socioeconomic status of a locality relative to the distribution of scores obtained for all localities. An important early academic article on the relative merits of different measures is ['Which deprivation? A comparison of selected deprivation indexes'](http://jpubhealth.oxfordjournals.org/cgi/content/abstract/13/4/318?ijkey=e017f6510f37ea6bf87ac17d1d0be2c13f1ec783&keytype2=tf_ipsecsha), published in 1991.
+
+The SIMD was first published in June 2004, based on a slightly earlier initiative from England & Wales. In 2000, as part of the [Neighbourhood Statistics programme](https://digitalblog.ons.gov.uk/2017/04/19/goodbye-to-old-friends-and-hello-to-the-new/) in England and Wales (Now ONS Digital), a project to create new [English Indices of Deprivation](https://www.gov.uk/government/collections/english-indices-of-deprivation) was commissioned. In Scotland, as part of the Scottish Executive's [Scottish Neighbourhood Statistics](https://data.gov.uk/dataset/c4930839-8a32-4a71-b5d7-aec4a51ed1e2/scottish-neighbourhood-statistics) initiative, a new [Scottish Index of Multiple Deprivation (SIMD)](http://www.scotland.gov.uk/simd) using similar methodology was published in June 2004 and was updated in 2006, 2009, 2012, 2016 and 2020. The English index combined information relating to income, employment, education, health, skills and training, barriers to housing and services and crime into an overall measure of deprivation at a small area level. One of the key differences between this type of index and previous deprivation measures is that it is derived from administrative data (routine data gathered through registration for, and use of, services such as health and education). Because of this it is not reliant on Census data, and can be updated on a more frequent basis.
+
+## Value of measuring area deprivation
+
+The importance of deprivation as a key component of social inequality has been recognised for a long time. It is widely accepted that deprivation increases the risk of early death and is associated with higher rates of illness from certain diseases. For example, in 2013-2014, [healthy life expectancy](http://www.gov.scot/Publications/2015/10/6061/5) for those living in the 10% most deprived areas was 25.1 years lower for males and 22.1 years lower for females compared to those living in the 10% least deprived areas.
+
+In relation to health, measures of deprivation are used for a variety of purposes, including: measuring and monitoring inequalities in health, access to healthcare and healthcare activity; and for standardising health and healthcare activity measures to enable more meaningful comparisons between organisations or geographical areas.
+
+There are clearly many links between deprivation and health inequalities (See chart 1). The section on [health inequalities](https://www.scotpho.org.uk/comparative-health/health-inequalities/policy-context) summarises the Scottish Government's approach to tackling health inequalities, which focuses on alleviating deprivation and its impact on health. The data pages of this section provide a selection of charts highlighting associations between health and deprivation, while the key data sources section describes useful sources of deprivation data.
+
+The SIMD is widely used across local and national government for directing resources, setting targets ([Scotland Performs](http://www.scotland.gov.uk/About/scotPerforms)) and monitoring social and health inequalities (see for example [Long-Term Monitoring of Health Inequalities: Headline Indicators](https://www.gov.scot/publications/long-term-monitoring-health-inequalities-january-2021-report/)).
+
+## Recommended uses for the SIMD
+
+The [SIMD 2020 Introduction document](https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/01/scottish-index-multiple-deprivation-2020/documents/scottish-index-multiple-deprivation-2020/scottish-index-multiple-deprivation-2020/govscot%3Adocument/scottish-index-multiple-deprivation-2020.pdf?forceDownload=true) recommends use of the SIMD for the following purposes:
+
+-   Comparing small areas in terms of overall and domain-specific scores
+-   Comparing small areas within council
+-   Identifying areas where people experience multiple forms of deprivation, and areas of greater need for support and intervention
+
+The same Introduction (page 6) recommends **against** attempting to use the SIMD for the following purposes:
+
+-   Comparing areas by rank rather than score;
+-   Comparing ranks over time;
+-   Comparing SIMD scores and ranks based on the SIMD against scores based on the English/Welsh IMD (as they are calculated differently);
+-   Attempting to infer where rich and poor households live;
+-   and: Identifying affluent areas (as absence of deprivation is not the same as presence of affluence).
+
+Additional caveats in interpreting SIMD data are also described in the 'Limitations of SIMD' subsection of [this Public Health Scotland website](https://www.isdscotland.org/Products-and-Services/GPD-Support/Deprivation/SIMD/).
+
+# Policy context
+
+## Deprivation: policy context
+
+Tackling deprivation has been a government priority in Scotland over a long period. In 1988 the Scottish Office launched its New Life for Urban Scotland Initiative which created regeneration partnerships in four peripheral housing estates: Castlemilk in Glasgow, Ferguslie Park in Paisley, Wester Hailes in Edinburgh and Whitfield in Dundee.
+
+After devolution in 1999, the then Scottish Executive committed itself to tackling poverty and disadvantage through its Social Justice Strategy. The Social Justice Strategy was supported nationally by the Social Justice milestones and locally by the establishment of 'Social Inclusion Partnerships (SIPs)' throughout Scotland (replacing what were formerly Priority Partnership Areas (PPAs) and Regeneration Partnerships (RPs). A key feature of these initiatives was their focus on regeneration and social inclusion in areas of high deprivation.
+
+In November 2008, the Scottish Government launched [Achieving Our Potential: A Framework to Tackle Poverty and Income Inequality in Scotland, 2008](http://www.gov.scot/Publications/2008/11/20103815/0), which outlined a long-term approach to reducing levels of poverty and income inequality in Scotland. Among its key aims are:
+
+-   to increase overall income and the proportion of income earned by the three lowest income deciles by 2017;
+-   to decrease the proportion of individuals living in poverty; and
+-   to increase [healthy life expectancy](https://www.scotpho.org.uk/population-dynamics/healthy-life-expectancy/key-points) at birth in the most deprived areas.
+
+Related to this, many of the health-related indicators set out in [Scotland Performs/the National Performance Framework](https://nationalperformance.gov.scot/) (for example, on smoking, problem drug misuse and alcohol-related admissions to hospital) will particularly benefit people living in the most deprived communities in Scotland if their targets are achieved.
+
+A report from the Independent Advisor on Poverty and Inequality to the First Minister, [Shifting the Curve](http://www.gov.scot/Publications/2016/01/1984), was published in January 2016. The latest report on [Long Term Monitoring of Health Inequalities](https://www.gov.scot/publications/long-term-monitoring-health-inequalities-january-2021-report/) was published in January 2021.
+
+The international context is set by the World Health Organization [Commission on Social Determinants of Health (2008)](http://whqlibdoc.who.int/publications/2008/9789241563703_eng.pdf), which notes that:
+
+```         
+the development of a society, rich or poor, can be judged by the quality of its population's health, how fairly health is distributed across the social spectrum, and the degree of protection provided from disadvantage as a result of ill-health. 
+```
+
+In 2010, the Chair of the Commission, Sir Michael Marmot, concluded a strategic review of health inequalities in England ([Strategic Review of Health Inequalities in England Post 2010](http://www.instituteofhealthequity.org/)). Its analysis and recommendations remain relevant to Scotland. Marmot and colleagues followed up the 2010 review with [Health Equity in England: The Marmot review 10 years on](https://www.health.org.uk/publications/reports/the-marmot-review-10-years-on?gclid=CjwKCAjw-sqKBhBjEiwAVaQ9a-5gfu9eoUcgiavt-dYs8Z1LoPM3mWQsdITg6UIZzDdKnRJdoTG--hoCLqcQAvD_BwE), published by the Health Foundation in February 2020.
+
+In 2017 the Scottish parliament passed the [Child Poverty (Scotland) Act 2017](https://www.parliament.scot/bills-and-laws/bills/child-poverty-scotland-bill). This is an Act of the Scottish Parliament to set targets relating to the eradication of child poverty; to make provision about plans and reports relating to the targets; and to establish the Poverty and Inequality Commission and provide for its functions.
+
+All of the above illustrate the impact of deprivation on individuals and communities, and its effective measurement, within past and current government policy.
+
+In 2018, the Joseph Rowntree Foundation published [Poverty in Scotland](https://www.jrf.org.uk/report/poverty-scotland-2018), looking at poverty trends for families with children in Scotland. And in 2017, [UK Poverty 2017](https://www.jrf.org.uk/report/uk-poverty-2017) a report assessing the progress made in reducing poverty and tackling the underlying drivers of poverty.
+
+## Uses of SIMD in resource allocation
+
+The [NHS Scotland Resource Allocation Committee (NRAC)](http://www.tagra.scot.nhs.uk/research/) was established to ensure the [Arbuthnott Formula (2000-2005)](https://www.scotpho.org.uk/wider-determinants/deprivation/key-data-sources/) was still allocating resources to NHS Boards in a way that reflects local need for healthcare. The Arbuthnott Formula included a Morbidity and Life Circumstances adjustment for deprivation. NRAC's 2007 report recommended (and it was accepted by Government) that in future there should be separate "additional needs" adjustments for different care groups. It did not recommend using SIMD as part of the revised Formula, since the SIMD indicators did not appear to be the best predictors of healthcare need. However, 30% of NHS Scotland funding (e.g. for dental practices in deprived areas) is allocated using the SIMD.
+
+# Data
+
+## Deprivation: data
+
+SIMD data by release (from 2004 to 2020) and datazone are available from [this Public Health Scotland webpage](https://www.opendata.nhs.scot/dataset/scottish-index-of-multiple-deprivation).
+
+Deprivation related tables and graphs appear throughout the ScotPHO website within topic pages including physical activity and deaths. For further information on how deprivation is related to a specific topic, please go to the data section for that topic.
+
+## Deprivation by health boards and local authorities
+
+Chart 2 shows the how the 15% most deprived datazones in Scotland are distributed across NHS Health boards.
+
+```{r, echo = FALSE, include = TRUE}
+# So let's construct a new aval containing the different x-y tuples given the threshold selected
+
+calc_prop_deprived <- function(q, dta){
+    dta %>% 
+      group_by(HBname) %>% 
+      summarise(prop_deprived = mean(pct_rank < q)) %>% 
+      ungroup()
+}
+
+df_rank <- 
+  dta %>% 
+    select(HBname, SIMD2020v2_Rank) %>% 
+    mutate(pct_rank = SIMD2020v2_Rank / max(SIMD2020v2_Rank))
+
+
+shared_df <- tibble(
+  dep_quants = seq(0.05, 0.95, by = 0.05)
+) %>% 
+  mutate(derived_props = map(dep_quants, calc_prop_deprived, dta = df_rank)) %>% 
+  unnest(derived_props) %>% 
+  mutate(undep_quants = 1 - dep_quants) 
+
+
+# Now to put it in the structure, and set active for `dep_quants = 0.15`
+
+df_15pc <- shared_df |> 
+  filter(between(dep_quants, 0.149, 0.151)) |> 
+  select(-dep_quants, -undep_quants)
+
+df_15pc |>
+  mutate(pct_deprived = 100 * prop_deprived) |> 
+  ggplot(aes(y= pct_deprived, x = fct_reorder(HBname, pct_deprived))) + 
+  geom_bar(stat = "identity") +
+  geom_text(
+    aes(
+      label = ifelse(df_15pc$prop_deprived > 0, sprintf("%.1f", pct_deprived), "")
+    ), 
+    color = "white",
+    hjust = 1, 
+    nudge_y = -0.5
+  ) + 
+  coord_flip() + 
+  labs(
+    x = "Health Board",
+    y = "Percent of datazones in 15% most deprived proportion of Scotland",
+    title = "Percent of datazones in Health Board in 15% most deprived areas of Scotland",
+    subtitle = "SIMD 2020"
+  ) + 
+  geom_hline(yintercept = 0)
+
+if (!file.exists("assets/chart02_hb.png")) {
+  ggsave("assets/chart02_hb.png", units = "cm", width = 25, height = 15, dpi=150)
+}
+
+```
+
+**Chart 2**: The proportion of datazones in each health board which are in the 15% most deprived small areas in Scotland. (The slider can be used to select other deprivation thresholds. Source: SIMD 2020)
+
+The chart shows that 29.4% of datazones in Greater Glasgow & Clyde are in the most deprived 15% of datazones for Scotland overall. This is followed by Ayrshire and Arran, with 21.1%. At the other end of the scale the Western Isles, Shetland, and Orkney have no datazones in the most deprived 15% of datazones for the whole of Scotland, followed by Grampian, where just 2.6% of datazones are in the most deprived 15% of areas.
+
+Chart 3 shows the equivalent for the 32 local authorities in Scotland. As with Chart 2 the deprivation threshold can be adjusted, and by default is at 15%.
+
+```{r, echo = FALSE, include = TRUE, fig.height = 8, fig.width = 8}
+# So let's construct a new aval containing the different x-y tuples given the threshold selected
+
+
+calc_prop_deprived <- function(q, dta){
+    dta %>% 
+      group_by(LAname) %>% 
+      summarise(prop_deprived = mean(pct_rank < q)) %>% 
+      ungroup()
+}
+
+df_rank <- 
+  dta %>% 
+    select(LAname, SIMD2020v2_Rank) %>% 
+    mutate(pct_rank = SIMD2020v2_Rank / max(SIMD2020v2_Rank))
+
+
+shared_df <- tibble(
+  dep_quants = seq(0.05, 0.95, by = 0.05)
+) %>% 
+  mutate(derived_props = map(dep_quants, calc_prop_deprived, dta = df_rank)) %>% 
+  unnest(derived_props) %>% 
+  mutate(undep_quants = 1 - dep_quants) 
+
+
+# Now to put it in the structure, and set active for `dep_quants = 0.15`
+
+
+unique_dep_quants <- unique(shared_df$dep_quants)
+n_steps <- length(unique_dep_quants)
+
+dep_vals <- list()
+for (step in 1:n_steps){
+  tmp <- 
+    shared_df %>% 
+      filter(dep_quants == unique_dep_quants[step]) %>% 
+      select(LAname, prop_deprived) %>% 
+      mutate(LAname = reorder(LAname, prop_deprived))
+  
+  dep_vals[[step]] <- list(
+    visible = FALSE,
+    name = paste0('Quantile: ', unique_dep_quants[step]),
+    x=tmp$prop_deprived,
+    y=tmp$LAname
+    
+  ) 
+}
+
+df_15pc <- shared_df |> 
+  filter(between(dep_quants, 0.149, 0.151)) |> 
+  select(-dep_quants, -undep_quants)
+
+df_15pc |>
+  mutate(pct_deprived = 100 * prop_deprived) |> 
+  ggplot(aes(y= pct_deprived, x = fct_reorder(LAname, pct_deprived))) + 
+  geom_bar(stat = "identity") +
+  geom_text(
+    aes(
+      label = ifelse(df_15pc$prop_deprived > 0, sprintf("%.1f", pct_deprived), ""),
+      y = pct_deprived + ifelse(df_15pc$prop_deprived > 0.02, -0.5, 2),
+      color = df_15pc$prop_deprived > 0.02
+    ), 
+    hjust = 1
+  ) + 
+  scale_color_manual(values = c(`FALSE` = "black", `TRUE`='white')) +
+  coord_flip() + 
+  theme(legend.position = "none") +
+  labs(
+    x = "Local Authority",
+    y = "Percent of datazones in 15% most deprived proportion of Scotland",
+    title = "Percent of datazones in Local Authority in 15% most deprived areas of Scotland",
+    subtitle = "SIMD 2020"
+  ) + 
+  geom_hline(yintercept = 0)
+
+if (!file.exists("assets/chart03_la.png")) {
+  ggsave("assets/chart03_la.png", units = "cm", width = 25, height = 15, dpi=150)
+}
+
+```
+
+**Chart 3**: The proportion of datazones in each local authority which are in the 15% most deprived small areas in Scotland.
+
+Chart 3 shows that Glasgow City, Inverclyde and Dundee City are the local authorities with the greatest proportion of datazones in the 15% most deprived areas of Scotland, with 39%, 37% and 31% this deprived respectively. At the other extreme the Shetland Islands, Orkney Islands an Na h-Eileanan Siar contain no datazones in the 15% most deprived areas of Scotland.
+
+## Deprivation by urbanity and rurality
+
+There are marked differences in area deprivation by urbanity and rurality. Both [six-fold and eight-fold Urban-Rural categories](https://www.gov.scot/publications/scottish-government-urban-rural-classification-2016/pages/2/) are used to categorise Scottish datazones. However these groups do not contain equal populations, and so comparing the share of datazones in each category within (say) the most deprived 15% of Scottish datazones is not appropriate. Instead, the relative share of deprived datazones in each category to the share of all datazones in each category can be used to calculate to what extent deprived datazones are over-represented or under-represented in each urban-rural category. This is shown in Table 1 for the SIMD 2020:
+
+```{r, echo = FALSE, include = TRUE}
+# So let's construct a new aval containing the different x-y tuples given the threshold selected
+
+
+calc_prop_deprived <- function(q, dta){
+    dta %>% 
+      group_by(urname) %>% 
+      summarise(
+        prop_deprived = mean(pct_rank < q),
+        n_datazones   = n()
+        ) %>% 
+      ungroup() %>% 
+      mutate(share_of_dz = n_datazones / sum(n_datazones))
+}
+
+df_rank <- 
+  dta %>% 
+    select(URclass, URname, SIMD2020v2_Rank) %>% 
+    mutate(urname = glue::glue("{URclass}: {URname}")) %>% 
+    select(urname, SIMD2020v2_Rank) %>% 
+    mutate(pct_rank = SIMD2020v2_Rank / max(SIMD2020v2_Rank)) %>% 
+    tibble()
+
+
+shared_df <- tibble(
+  dep_quants = seq(0.05, 0.95, by = 0.05)
+) %>% 
+  mutate(derived_props = map(dep_quants, calc_prop_deprived, dta = df_rank)) %>% 
+  unnest(derived_props) %>% 
+  mutate(undep_quants = 1 - dep_quants) %>% 
+  mutate(over_rep = prop_deprived / share_of_dz)
+
+shared_df %>% 
+  filter(between(dep_quants, 0.14, 0.16)) %>% 
+  select(urname, prop_deprived, n_datazones, share_of_dz, over_rep) %>% 
+  mutate(under_rep = 1/ over_rep) %>% 
+  mutate(over_under_rep = glue::glue("{round(over_rep, 1)}:1 ({round(under_rep, 1)}:1)")) %>% 
+  mutate(prop_deprived = round(100 * prop_deprived, 1), share_of_dz = round(100 * share_of_dz, 1)) %>% 
+  select(-over_rep, -under_rep) %>% 
+  flextable() %>% 
+  set_header_labels(urname = "Urban Rural Category", prop_deprived = "Percentage deprived", n_datazones = "Number of datazones", share_of_dz = "Percentage of datazones", over_under_rep = "Over(/Under) representation of deprived populations") %>% 
+  footnote(i = 1, j = c(2, 5), 
+           ref_symbols = c("a", "b"), 
+           value = as_paragraph(
+             c(
+               "Percent of datazones in most deprived 15% of all parts of Scotland",
+               "Overrepresentation: Ratio of Percentage deprived to Percentage of datazones; underrepresentation: Ratio of Percentage of datazones to Percentage deprived"
+             )
+           ), 
+           part = "header"
+  ) %>% 
+  set_caption("Table 1: Over and Under-representation of deprived populations by Urban-Rural category relative to size of Urban-Rural category") 
+
+# if (!file.exists("assets/table01_rep.png")) {
+#   png("assets/table01_rep.png")
+#   tbl_01
+#   dev.off()
+# }
+
+# tbl_01
+
+```
+
+Table 1 shows, for example, that 2294 datazones (32.9% of all datazones) are categorised as within Large Urban Areas. 22.1% of these same areas are categorised as deprived using the 15% threshold, and so using this measure high deprivation is slightly under-represented in this Urban-Rural Category. Deprived areas are very heavily under-represented in Accessible Rural (category 5) and Remote Rural (category 6) areas, and Accessible Small Towns (category 3) are the category most representative of Scotland as a whole.
+
+Remote Small Towns (category 4) comprise 10.9% of the most deprived datazones in Scotland, but only 3.7% of datazones in Scotland, and so have the greatest over-representation of deprived areas.
+
+# Key data sources
+
+## Deprivation: key data sources
+
+A number of different measures of deprivation are in current use. This section provides an overview of sources of information on deprivation in general as well as showing where to access data for particular deprivation measures.
+
+[**Scottish Index of Multiple Deprivation (SIMD)**](http://www.gov.scot/simd)
+
+The most recent measure of deprivation is the Scottish Government's Scottish Index of Multiple Deprivation (SIMD). The latest version (SIMD 2020) was published in January 2020. An interactive mapping tool is available [here](http://www.gov.scot/Topics/Statistics/SIMD/SIMDInteractive). Further information and links to data, including [spatial data](https://www.spatialdata.gov.scot/geonetwork/srv/eng/catalog.search#/metadata/02866b0b-66e5-46ab-9b1c-d433dc3c2fae), can be found [here](https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/).
+
+Data are also available for the SIMD 2004, 2006, 2009, 2012 and 2016. [Public Health Scotland Data and Intelligence](http://www.isdscotland.org/Products-and-Services/GPD-Support/Deprivation/SIMD) (formerly ISD Scotland) have also published detailed look-up files for SIMD 2004, 2006, 2009, 2012 and 2016.
+
+**Arbuthnott Formula - ['Fair Shares for All'](http://www.isdscotland.org/Health-Topics/Finance/Resource-Allocation-Formula/)**
+
+The Arbuthnott formula was developed during 1999-2000 as part of a larger piece of work to update the calculations of health service resource allocation in Scotland. This formula uses a composite of four variables, one of which takes account of information from six other deprivation indicators. Three variables are drawn from 'updateable' sources (death rates, income support claimants and unemployment benefit recipients). The remaining variable is drawn from the 1991 Census. Unlike the Carstairs Score, lack of car ownership is not included. The Arbuthnott formula has been replaced by the NHSScotland Resource Allocation Committee (NRAC) formula, however, the basic structures of these formulae are very similar.
+
+[**Carstairs and Morris Index**](https://www.gla.ac.uk/researchinstitutes/healthwellbeing/research/mrccsosocialandpublichealthsciencesunit/programmes/inequalities/healthinequalities/carstairsscores/)
+
+The Carstairs and Morris Index index was originally developed in the 1980s using 1981 Census data and is updated using the most recent Census data. The index is derived from four Census indicators: low social class, lack of car ownership, overcrowding and male unemployment. Carstairs Scores for Scottish Postcode Sectors, Datazones & Output Areas from the 2011 Census were published on Glasgow University's MRC Social and Public Health Sciences Unit (see link above). Note that the previous scores from 1981-2001 (at postcode level) can also be accessed there as well.
+
+[**The Scottish Burden of Disease Study (2016) Deprivation Report**](http://www.healthscotland.scot/health-inequalities/impact-of-ill-health/impact-of-deprivation-on-health)
+
+The analysis used an internationally recognised approach, referred to as 'Burden of Disease', to quantify the difference between the ideal of living to old age in good health and the situation where healthy life is shortened by illness, injury, disability and early death.
+
+An overview of the Scottish Burden of Disease is available [here](http://www.healthscotland.scot/health-inequalities/impact-of-ill-health/burden-of-disease-overview).
+
+[**Dimensions of diversity: Population differences and health improvement opportunities**](https://www.scotpho.org.uk/publications/reports-and-papers/dimensions-of-diversity-population-differences-and-health-improvement-opportunities/)
+
+Published in 2010, this report provides a concise overview of basic information about 13 characteristics or groups of the population of Scotland, linking users to sources of further information. The distribution of each group is described in terms of their deprivation status.
+
+[**Local estimates of relative household poverty**](https://www.gov.scot/Publications/2018/03/3017)
+
+The Scottish Government have published estimates, based on national survey data, of the proportion of households in relative poverty at local authority level across Scotland.
+
+**Local estimates of child poverty**
+
+Scotland's National Performance Framework includes [trends of child material deprivation](https://nationalperformance.gov.scot/measuring-progress/national-indicator-performance), which shows the percentage of children living in poverty in Scotland at around 13%, and possibly increasing slightly in recent years.
+
+[**Public Health Scotland, Data and Intelligence, formerly ISD Scotland - Deprivation**](https://www.isdscotland.org/Products-and-services/Gpd-support/Deprivation/)
+
+The website above, formerly from ISD Scotland, has a section on deprivation with useful pages with recommendations for analysing health data, ways to categorise deprivation variables and choices of geographical unit for small area analysis. It recommends using the Carstairs and Morris Index for estimates of area deprivation prior to 1996, and the SIMD for measuring area deprivation from 1996 onwards.
+
+# Key references and evidence
+
+## Deprivation: key references and evidence
+
+-   Bailey N, Flint J, Goodlad R, Shucksmith M, Fitzpatrick S, Pryce G. [Measuring Deprivation in Scotland: Developing a Long-Term Strategy Final Report](http://eprints.gla.ac.uk/67863/). Glasgow: Scottish Centre for Research on Social Justice, Universities of Glasgow and Aberdeen 2003
+
+-   Boyle P, Exeter D, Feng Z, Flowerdew R. [Suicide gap among young adults in Scotland: population study](http://bmj.bmjjournals.com/cgi/content/full/330/7484/175) BMJ, January 22, 2005; 330(7484): 175 - 176.
+
+-   Chalmers J, Capewell S. [Deprivation, disease, and death in Scotland: graphical display of survival of a cohort](http://bmj.bmjjournals.com/cgi/content/full/323/7319/967?maxtoshow=&HITS=10&hits=10&RESULTFORMAT=1&andorexacttitle=and&andorexacttitleabs=and&fulltext=deprivation+scotland&andorexactfulltext=and&searchid=1130520531860_13607&stored_search=&FIRSTIND) BMJ, Oct 2001; 323: 967 - 968.
+
+-   Jarman B. [Underprivileged areas: validation and distribution of scores.](http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=retrieve&db=pubmed&list_uids=6439333&dopt=Abstract) BMJ 1984;289:1587-92.
+
+-   Macintyre K, Stewart S, Chalmers J, Pell J, Finlayson A, Boyd J, Redpath A, McMurray J, Capewell S. [Relation between socioeconomic deprivation and death from a first myocardial infarction in Scotland: population based analysis](http://eprints.gla.ac.uk/74/). BMJ, May 2001; 322: 1152 - 1153
+
+-   McAlister FA, Murphy NF, Simpson CR, Stewart S, MacIntyre K, Kirkpatrick M, Chalmers J, Redpath A, Capewell S, McMurray JJV. [Influence of socioeconomic deprivation on the primary care burden and treatment of patients with a diagnosis of heart failure in general practice in Scotland: population based study.](http://bmj.bmjjournals.com/cgi/content/full/328/7448/1110?maxtoshow=&HITS=10&hits=10&RESULTFORMAT=1&andorexacttitle=and&andorexacttitleabs=and&fulltext=deprivation+scotland&andorexactfulltext=and&searchid=1130520531860_13607&stored_search=&FIRSTIN) BMJ 2004;328:1110
+
+-   McLeod A. [Changing patterns of teenage pregnancy: population based study of small areas](http://bmj.bmjjournals.com/cgi/content/full/323/7306/199?maxtoshow=&HITS=10&hits=10&RESULTFORMAT=1&title=Changing+patterns+of+teenage+pregnancy%3A+population+based+study+of+small+areas&andorexacttitle=and&andorexacttitleabs=and&andorexactfulltext=). BMJ, Jul 2001; 323: 199 - 203
+
+-   McLoone P, Boddy FA. [Deprivation and mortality in Scotland, 1981 and 1991.](http://bmj.bmjjournals.com/cgi/content/full/309/6967/1465?maxtoshow=&HITS=10&hits=10&RESULTFORMAT=1&andorexacttitle=and&andorexacttitleabs=and&fulltext=deprivation+scotland&andorexactfulltext=and&searchid=1130520531860_13607&stored_search=&FIRSTIN) BMJ, Dec 1994; 309: 1465 - 1470.
+
+-   Scottish Executive. [Scottish Index of Multiple Deprivation 2006: General Report.](http://www.scotland.gov.uk/Publications/2006/10/13142739/0) Edinburgh: Scottish Executive, 2006.
+
+-   Townsend P, Phillimore P, Beattie A. Health and deprivation: inequality and the North. London: Croom Helm, 1988.
+
+# Useful links
+
+## Deprivation: useful links
+
+The first starting point for exploring SIMD is probably [simd.scot](https://simd.scot), an interactive map showing how deprivation both overall and by domain varies throughout Scotland.
+
+[ISD Scotland - Deprivation](http://www.isdscotland.org/Products-and-Services/GPD-Support/Deprivation/SIMD/)
+
+[MRC/CSO Social and Public Health Sciences Unit](http://www.gla.ac.uk/researchinstitutes/healthwellbeing/research/mrccsosocialandpublichealthsciencesunit/)
+
+[Poverty Alliance](http://www.povertyalliance.org/)
+
+[Scottish Index of Multiple Deprivation (SIMD)](http://www.gov.scot/simd)
+
+[Scottish Government - Social and Welfare - Income and Poverty Statistics](http://www.gov.scot/Topics/Statistics/Browse/Social-Welfare/IncomePoverty)
